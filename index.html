@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kchau</title>
+    <style>
+        @font-face {
+            font-family: 'SAOWelcomeTT';
+            src: url('fonts/SAOWelcomeTT-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            position: relative;
+            background-color: #212121;
+        }
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        .container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: -50px;
+        }
+        .avatar-container {
+            height: 140px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 5px;
+            position: relative;
+        }
+        .avatar-image, .avatar-video {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid #f3f705;
+            box-shadow: 0 0 15px #f3f705;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: -10px;
+            transition: 0.5s ease;
+        }
+
+        .avatar-image, .avatar-video:hover{
+            width: 150px;
+            height: 150px;
+        }
+
+        .avatar-image {
+            background: no-repeat center center;
+            background-size: cover;
+            display: none;
+        }
+        .avatar-video {
+            object-fit: cover;
+            display: none;
+        }
+        .bio-text {
+            font-family: 'SAOWelcomeTT', 'Arial', sans-serif;
+            font-size: 18px;
+            margin-bottom: 15px;
+            max-width: 600px;
+            text-shadow: 0 0 3px #f3f705;
+        }
+        .button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            width: 200px;
+            background: transparent;
+            border: 2px solid #f3f705;
+            color: #f3f705;
+            font-size: 18px;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-shadow: 0 0 5px #f3f705;
+        }
+        .button:hover {
+            background: #f3f705;
+            color: #000;
+            box-shadow: 0 0 15px #f3f705;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 3;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .modal .modal-content {
+            background: rgba(0, 10, 20, 0.95);
+            border: 2px solid #f3f705;
+            box-shadow: 0 0 30px #f3f705, inset 0 0 15px #f3f705;
+            border-radius: 10px;
+            padding: 20px;
+            width: 80%;
+            max-width: 500px;
+            color: #fff;
+            text-align: center;
+            animation: saoFadeIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+        .modal .modal-content::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                linear-gradient(
+                    to right,
+                    rgba(239, 243, 4, 0.05) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    to bottom,
+                    rgba(239, 243, 4, 0.05) 1px,
+                    transparent 1px
+                );
+            background-size: 4px 4px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .modal .modal-content::after {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(45deg,
+                rgba(214, 226, 43, 0.1) 0%,
+                rgba(214, 226, 43, 0) 20%,
+                rgba(214, 226, 43, 0.1) 40%,
+                rgba(214, 226, 43, 0) 60%,
+                rgba(214, 226, 43, 0.1) 80%,
+                rgba(214, 226, 43, 0) 100%);
+            background-size: 400% 400%;
+            animation: saoScan 6s linear infinite;
+            z-index: -1;
+            opacity: 0.5;
+        }
+        @keyframes saoFadeIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) translateY(20px);
+                filter: blur(5px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                filter: blur(0);
+            }
+        }
+        @keyframes collapse {
+            0% {
+                transform: scaleY(1);
+            }
+            90% {
+                transform: scaleY(0);
+            }
+            100% {
+                transform: scaleY(0);
+                opacity: 0;
+            }
+        }
+        @keyframes burst {
+            0% {
+                opacity: 0.8;
+                background-color: #f3f705;
+            }
+            100% {
+                opacity: 0;
+                background-color: rgba(214, 226, 43, 0);
+            }
+        }
+        .modal .modal-content.collapsing {
+            animation: collapse 0.4s ease-in-out forwards;
+        }
+        .modal .modal-content.collapsing::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            animation: burst 0.3s ease-out forwards;
+            z-index: 10;
+        }
+        .project-text {
+            font-family: 'SAOWelcomeTT', 'Arial', sans-serif;
+            font-size: 18px;
+            margin-bottom: 20px;
+            max-width: 600px;
+            text-shadow: 0 0 5px #f3f705;
+        }
+        .project-content {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 20px;
+            margin-bottom: 20px;
+            max-width: 600px;
+            text-align: left;
+            text-shadow: 0 0 3px #f3f705;
+        }
+        .project-content strong {
+            padding-left: 20px;
+            display: block;
+        }
+        .project-content a {
+            display: block;
+            margin: 10px auto;
+            padding: 8px 16px;
+            width: 250px;
+            background: transparent;
+            border: 2px solid #f3f705;
+            color: #f3f705;
+            font-size: 14px;
+            font-family: 'Courier New', Courier, monospace;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .project-content a:hover {
+            background: #f3f705;
+            color: #000;
+            box-shadow: 0 0 10px #f3f705;
+        }
+        .donation-content {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 20px;
+            margin-bottom: 20px;
+            max-width: 600px;
+            text-align: left;
+            text-shadow: 0 0 4px #f3f705;
+        }
+        .donation-content strong {
+            padding-left: 20px;
+            display: block;
+        }
+        .donation-content a {
+            display: block;
+            margin: 10px auto;
+            padding: 8px 16px;
+            width: 250px;
+            background: transparent;
+            border: 2px solid #f3f705;
+            color: #f3f705;
+            font-size: 14px;
+            font-family: 'Courier New', Courier, monospace;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .donation-content a:hover {
+            background: #f3f705;
+            color: #000;
+            box-shadow: 0 0 10px #f3f705;
+        }
+        .modal .modal-content {
+            display: none;
+        }
+        .modal.show .modal-content {
+            display: block;
+        }
+        @keyframes saoScan {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+        .modal-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .close-button {
+            display: inline-block;
+            margin: 10px auto;
+            padding: 8px 16px;
+            width: 100px;
+            background: transparent;
+            border: 2px solid #f3f705;
+            color: #f3f705;
+            font-size: 14px;
+            font-family: 'Courier New', Courier, monospace;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-shadow: 0 0 5px #f3f705;
+        }
+        .close-button:hover {
+            background: #f3f705;
+            color: #000;
+            box-shadow: 0 0 15px #f3f705;
+        }
+        .music-control {
+            position: fixed;
+            bottom: -100px;
+            right: 20px;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            background: rgba(20, 20, 0, 0.9);
+            border: 2px solid #e4e68c;
+            box-shadow: 0 0 15px #e4e68c, inset 0 0 8px #e4e68c;
+            border-radius: 10px;
+            padding: 10px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(100px); }
+            to { transform: translateY(0); }
+        }
+        .disc {
+            width: 30px;
+            height: 30px;
+            background: no-repeat center center;
+            background-size: cover;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: spin 2s linear infinite, pulse 1s ease-in-out infinite;
+            animation-play-state: paused;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(214, 226, 43, 0.4); }
+            50% { box-shadow: 0 0 0 5px rgba(214, 226, 43, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(214, 226, 43, 0); }
+        }
+        .music-control.playing .disc {
+            animation-play-state: running;
+        }
+        .toggle-button {
+            font-family: 'Courier New', Courier, monospace;
+            color: #ffffff;
+            font-size: 12px;
+            margin-right: 10px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border: 1px solid #e4e68c;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px #e4e68c;
+        }
+        .toggle-button:hover {
+            background: #e4e68c;
+            color: #000;
+        }
+        .music-slider {
+            width: 100px;
+            accent-color: #e6e7b6;
+            margin-right: 5px;
+        }
+        .music-label {
+            font-family: 'Courier New', Courier, monospace;
+            color: #e4e68c;
+            font-size: 12px;
+            margin-right: 10px;
+            text-shadow: 0 0 5px #e4e68c;
+        }
+        .donation-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 6px 12px;
+            background: rgba(0, 10, 20, 0.7);
+            border-radius: 30px;
+            border: 1px solid #f3f705;
+            box-shadow: 0 0 10px rgba(138, 43, 226, 0.3);
+            transition: all 0.3s ease;
+            gap: 4px;
+        }
+        .donation-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #f3f705;
+            box-shadow: 0 0 5px #f3f705;
+            object-fit: cover;
+            background: rgba(0, 0, 0, 0.5);
+            margin-right: 0;
+        }
+        .donation-item span {
+            color: #f3f705;
+            font-family: 'SAOWelcomeTT', 'Arial', sans-serif;
+            text-shadow: 0 0 3px #f3f705;
+            font-size: 16px;
+            line-height: 1.2;
+            padding-top: 2px;
+        }
+        @media (max-width: 600px) {
+            .project-content strong {
+                padding-left: 10px;
+            }
+            .donation-content strong {
+                padding-left: 10px;
+            }
+            .avatar-container {
+                height: 100px;
+            }
+            .avatar-image, .avatar-video {
+                width: 80px;
+                height: 80px;
+                margin-top: -8px;
+            }
+            .bio-text {
+                font-size: 16px;
+            }
+            .button {
+                width: 150px;
+                font-size: 16px;
+            }
+            .modal-text {
+                font-size: 14px;
+            }
+            .close-button {
+                width: 80px;
+                font-size: 12px;
+            }
+            .project-content a {
+                width: 200px;
+                font-size: 12px;
+            }
+            .donation-content a {
+                width: 200px;
+                font-size: 12px;
+            }
+            .music-control {
+                bottom: -80px;
+                right: 10px;
+                padding: 5px;
+            }
+            .disc {
+                width: 25px;
+                height: 25px;
+            }
+            .toggle-button {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+            .music-slider {
+                width: 80px;
+            }
+            .donation-icon {
+                width: 30px;
+                height: 30px;
+            }
+            .donation-item span {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop class="video-background" id="backgroundVideo">
+        <source src="" type="video/mp4" id="videoSource">
+    </video>
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="avatar-container">
+            <!-- Контейнер для изображения -->
+            <div class="avatar-image" id="avatarImage"></div>
+            <!-- Контейнер для видео -->
+            <video class="avatar-video" id="avatarVideo" autoplay loop muted playsinline></video>
+        </div>
+        <div class="bio-text">Kcͥhaͣuͫ</div>
+        <a href="#" class="button" onclick="openModal('projectsModal')">Проекты</a>
+        <a href="#" class="button" onclick="openModal('donatModal')">Донат</a>
+        <a href="https://t.me/Crypto_Kchau" class="button">Связь со мной</a>
+    </div>
+
+    <!-- Donat Modal -->
+    <div class="modal" id="donatModal">
+        <div class="modal-content">
+            <div class="modal-text">Реквизиты:</div>
+            <div class="donation-content">
+                <p><strong>💰 Crypto:</strong></p>
+                <p><a href="https://app.tonkeeper.com/transfer/UQB0INCCH7majN2WFE0h-x32_QoWqiFXAm5g-PoeNZCes7rF">Tonkeeper</a></p>
+            </div>
+            <a href="#" class="close-button" onclick="closeModal('donatModal')">Закрыть</a>
+        </div>
+    </div>
+
+    <!-- Projects Modal -->
+    <div class="modal" id="projectsModal">
+        <div class="modal-content">
+            <div class="project-text">My Projects</div>
+            <div class="project-content">
+                <p><strong>👥 Channels:</strong></p>
+                <p><a href="#">Мой канал</a></p>
+                <p><a href="#">Мой канал️</a></p>
+                <p><a href="#">Мой канал️</a></p>
+                <p><strong>💬 Chats:</strong></p>
+                <p><a href="#">Мой чат</a></p>
+                <p><a href="#">Мой чат</a></p>
+                <p><strong>🤖 Bots:</strong></p>
+                <p><a href="#">Мой бот</a></p>
+                <p><a href="#">Мой бот</a></p>
+            </div>
+            <a href="#" class="close-button" onclick="closeModal('projectsModal')">Назад</a>
+        </div>
+    </div>
+
+    <div class="music-control">
+        <div class="disc" id="disc"></div>
+        <span class="toggle-button" id="playPause">Play</span>
+        <input type="range" min="0" max="1" step="0.1" value="0.3" class="music-slider" id="musicSlider">
+        <span class="music-label">Музыка</span>
+    </div>
+    <audio id="backgroundMusic"></audio>
+
+    <script>
+        // Список доступных тем
+        const themes = ['Tinasha', 'Kurumi Tokisaki', 'Mahiru Shiina', 'Miyako Shikimori', 'Alisa Mikhailovna Kujou', 'Tsukasa Yuzaki', 'Ai Hoshino', 'Ruby Hoshino', 'Akane Kurokawa', 'Aki Adagaki', 'Terakomari Gandesblood'];
+        
+        // Выбор случайной темы
+        function getRandomTheme() {
+            const randomIndex = Math.floor(Math.random() * themes.length);
+            return themes[randomIndex];
+        }
+        
+        // Проверка существования файла
+        async function checkFileExists(url) {
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                return response.ok;
+            } catch (error) {
+                console.error('Error checking file:', url, error);
+                return false;
+            }
+        }
+        
+        // Установка ресурсов для выбранной темы
+        async function setThemeResources(theme) {
+            const basePath = `src/${theme}`;
+            
+            // Определение типа аватара
+            const avatarImage = document.getElementById('avatarImage');
+            const avatarVideo = document.getElementById('avatarVideo');
+            
+            // Проверяем существование видео-аватара
+            const videoExtensions = ['mp4', 'webm', 'mov'];
+            let avatarType = 'image';
+            
+            for (const ext of videoExtensions) {
+                const videoPath = `${basePath}/avatar.${ext}`;
+                if (await checkFileExists(videoPath)) {
+                    // Установка видео-аватара
+                    avatarVideo.src = videoPath;
+                    avatarVideo.style.display = 'block';
+                    avatarImage.style.display = 'none';
+                    avatarType = 'video';
+                    break;
+                }
+            }
+            
+            // Если видео не найдено, используем изображение
+            if (avatarType === 'image') {
+                const imageExtensions = ['png', 'jpg', 'jpeg', 'gif'];
+                for (const ext of imageExtensions) {
+                    const imagePath = `${basePath}/avatar.${ext}`;
+                    if (await checkFileExists(imagePath)) {
+                        avatarImage.style.backgroundImage = `url('${imagePath}')`;
+                        avatarImage.style.display = 'block';
+                        avatarVideo.style.display = 'none';
+                        break;
+                    }
+                }
+            }
+            
+            // Фоновое видео
+            const videoSource = document.getElementById('videoSource');
+            videoSource.src = `${basePath}/background.mp4`;
+            const video = document.getElementById('backgroundVideo');
+            video.load();
+            
+            // Диск для музыки
+            document.getElementById('disc').style.backgroundImage = `url('${basePath}/disc.png')`;
+            
+            // Фоновая музыка
+            const audio = document.getElementById('backgroundMusic');
+            audio.src = `${basePath}/music.mp3`;
+            
+            return audio;
+        }
+        
+        // Инициализация страницы
+        window.onload = async function() {
+            // Выбор случайной темы
+            const theme = getRandomTheme();
+            
+            // Установка ресурсов
+            const audio = await setThemeResources(theme);
+            
+            // Скрываем модальные окна
+            document.getElementById('donatModal').style.display = 'none';
+            document.getElementById('projectsModal').style.display = 'none';
+            
+            // Показываем панель управления музыкой
+            const musicControl = document.querySelector('.music-control');
+            setTimeout(() => {
+                musicControl.style.bottom = '20px';
+            }, 100);
+            
+            // Загружаем состояние музыки
+            const playPauseButton = document.getElementById('playPause');
+            const musicSlider = document.getElementById('musicSlider');
+            
+            const savedState = JSON.parse(localStorage.getItem('musicState'));
+            if (savedState) {
+                audio.volume = savedState.volume;
+                musicSlider.value = savedState.volume;
+                
+                if (savedState.isPlaying) {
+                    // Задержка для воспроизведения после загрузки
+                    setTimeout(() => {
+                        audio.play().then(() => {
+                            playPauseButton.textContent = 'Pause';
+                            musicControl.classList.add('playing');
+                        }).catch(e => {
+                            console.log('Autoplay prevented:', e);
+                        });
+                    }, 500);
+                }
+            } else {
+                audio.volume = 0.3;
+                musicSlider.value = 0.3;
+            }
+            
+            // Обработчики событий
+            playPauseButton.addEventListener('click', function() {
+                if (audio.paused) {
+                    audio.play();
+                    playPauseButton.textContent = 'Pause';
+                    musicControl.classList.add('playing');
+                } else {
+                    audio.pause();
+                    playPauseButton.textContent = 'Play';
+                    musicControl.classList.remove('playing');
+                }
+                saveMusicState(audio);
+            });
+            
+            musicSlider.addEventListener('input', function() {
+                audio.volume = this.value;
+                saveMusicState(audio);
+            });
+        };
+        
+        // Сохранение состояния музыки
+        function saveMusicState(audio) {
+            const musicState = {
+                isPlaying: !audio.paused,
+                volume: audio.volume
+            };
+            localStorage.setItem('musicState', JSON.stringify(musicState));
+        }
+        
+        // Функции для работы с модальными окнами
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.classList.remove('collapsing');
+            modal.style.display = 'flex';
+            modal.classList.add('show');
+        }
+        
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.classList.add('collapsing');
+            setTimeout(() => {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modalContent.classList.remove('collapsing');
+            }, 400);
+        }
+        
+        // Закрытие модальных окон при клике вне контента
+        document.getElementById('donatModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal('donatModal');
+            }
+        });
+        
+        document.getElementById('projectsModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal('projectsModal');
+            }
+        });
+    </script>
+</body>
+</html>
